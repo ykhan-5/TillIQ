@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getOpenAIClient, isOpenAIConfigured } from '@/lib/ai/openaiClient';
 import { SYSTEM_PROMPT } from '@/lib/ai/prompts';
 import { AIResponseSchema } from '@/lib/ai/responseSchemas';
+import { buildInsightsPayload } from '@/lib/analytics';
+import { getSupabaseClient, isSupabaseConfigured } from '@/lib/supabase/client';
 import type { AskRequest } from '@/lib/types';
 
 // Force dynamic rendering
@@ -26,21 +28,43 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Fetch insights payload
-    const insightsResponse = await fetch(
-      `${request.nextUrl.origin}/api/insights?time_range=${time_range}`
-    );
-
-    if (!insightsResponse.ok) {
-      const errorText = await insightsResponse.text();
-      console.error('Insights fetch failed:', insightsResponse.status, errorText.substring(0, 200));
+    if (!isSupabaseConfigured()) {
       return NextResponse.json(
-        { error: 'Failed to fetch data. Please ensure the database is seeded.' },
-        { status: 502 }
+        { error: 'Supabase not configured' },
+        { status: 503 }
       );
     }
 
-    const insights = await insightsResponse.json();
+    // Fetch orders directly from Supabase (same logic as insights API)
+    const supabase = getSupabaseClient();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let allOrders: any[] = [];
+    let page = 0;
+    const pageSize = 1000;
+
+    while (true) {
+      const { data: orders, error: fetchError } = await supabase
+        .from('orders')
+        .select('*')
+        .order('order_date', { ascending: true })
+        .range(page * pageSize, (page + 1) * pageSize - 1);
+
+      if (fetchError) {
+        console.error('Supabase fetch error:', fetchError);
+        return NextResponse.json(
+          { error: 'Failed to fetch data from database' },
+          { status: 502 }
+        );
+      }
+      if (!orders || orders.length === 0) break;
+
+      allOrders = allOrders.concat(orders);
+      if (orders.length < pageSize) break;
+      page++;
+    }
+
+    // Build insights payload directly
+    const insights = buildInsightsPayload(allOrders, time_range);
 
     // Call OpenAI
     const openai = getOpenAIClient();
