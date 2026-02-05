@@ -16,6 +16,7 @@ export async function GET(request: NextRequest) {
 
     // Fetch all orders from Supabase using pagination to overcome 1000-row limit
     const supabase = getSupabaseClient();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let allOrders: any[] = [];
     let page = 0;
     const pageSize = 1000;
