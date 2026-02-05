@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
     while (true) {
       const { data: orders, error: fetchError } = await supabase
         .from('orders')
-        .select('*')
+        .select('order_date,customer_id,product_name,category,quantity,unit_price,total_price,cost')
         .order('order_date', { ascending: true })
         .range(page * pageSize, (page + 1) * pageSize - 1);
 
@@ -39,12 +39,7 @@ export async function GET(request: NextRequest) {
       page++;
     }
 
-    const orders = allOrders;
-    const error = null;
-
-    if (error) throw error;
-
-    const insights = buildInsightsPayload(orders || [], timeRange);
+    const insights = buildInsightsPayload(allOrders, timeRange);
 
     return NextResponse.json(insights);
   } catch (error) {
