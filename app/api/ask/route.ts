@@ -4,6 +4,9 @@ import { SYSTEM_PROMPT } from '@/lib/ai/prompts';
 import { AIResponseSchema } from '@/lib/ai/responseSchemas';
 import type { AskRequest } from '@/lib/types';
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
+
 export async function POST(request: NextRequest) {
   try {
     const body: AskRequest = await request.json();

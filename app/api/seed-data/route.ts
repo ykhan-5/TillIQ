@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server';
 import { seedDatabase } from '@/lib/data-generation';
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
+
 export async function POST() {
   try {
     // Generate and seed data

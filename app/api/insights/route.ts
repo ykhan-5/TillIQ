@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { buildInsightsPayload } from '@/lib/analytics';
 import { getSupabaseClient, isSupabaseConfigured } from '@/lib/supabase/client';
 
+// Force dynamic rendering since we use searchParams
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
