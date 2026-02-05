@@ -3,7 +3,8 @@ import type { Order } from '@/lib/types/database.types';
 import type {
   InsightsPayload,
   TopProduct,
-  CategoryBreakdown
+  CategoryBreakdown,
+  DailyChartData
 } from '@/lib/types/analytics.types';
 import { computeKPIs } from './computeKPIs';
 import { computeTrends, filterOrdersByDateRange, getPreviousPeriodDates } from './computeTrends';
@@ -60,6 +61,9 @@ export function buildInsightsPayload(
       category: o.category
     }));
 
+  // Calculate daily chart data for the full date range
+  const chart_data = calculateDailyChartData(currentOrders, startDate, endDate);
+
   return {
     time_range: timeRange,
     kpis,
@@ -67,7 +71,8 @@ export function buildInsightsPayload(
     top_products,
     category_breakdown,
     anomalies,
-    sample_orders
+    sample_orders,
+    chart_data
   };
 }
 
@@ -154,4 +159,44 @@ function calculateCategoryBreakdown(orders: Order[]): CategoryBreakdown[] {
       units: stats.units
     }))
     .sort((a, b) => b.revenue - a.revenue);
+}
+
+function calculateDailyChartData(
+  orders: Order[],
+  startDate: Date,
+  endDate: Date
+): DailyChartData[] {
+  // Create a map to aggregate revenue and orders by date
+  const dailyStats = new Map<string, { revenue: number; orders: number }>();
+
+  // Initialize all days in the range with zero values
+  const currentDate = new Date(startDate);
+  while (currentDate <= endDate) {
+    const dateKey = currentDate.toISOString().split('T')[0];
+    dailyStats.set(dateKey, { revenue: 0, orders: 0 });
+    currentDate.setDate(currentDate.getDate() + 1);
+  }
+
+  // Aggregate orders by date
+  orders.forEach(order => {
+    const dateKey = order.order_date.split('T')[0];
+    const existing = dailyStats.get(dateKey);
+    if (existing) {
+      existing.revenue += order.total_price;
+      existing.orders += 1;
+    }
+  });
+
+  // Convert to array and sort by date
+  return Array.from(dailyStats.entries())
+    .map(([date, stats]) => ({
+      date,
+      displayDate: new Date(date).toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric'
+      }),
+      revenue: parseFloat(stats.revenue.toFixed(2)),
+      orders: stats.orders
+    }))
+    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 }

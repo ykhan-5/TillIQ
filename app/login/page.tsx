@@ -1,19 +1,42 @@
 'use client';
 
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { APP_CONFIG } from '@/lib/utils/constants';
 
+const DEMO_CREDENTIALS = {
+  email: 'demo@email.com',
+  password: 'demo1234',
+};
+
 export default function LoginPage() {
   const router = useRouter();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleDemoLogin = () => {
-    // Simple demo login - just set a flag and redirect
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('demo_logged_in', 'true');
-      router.push('/dashboard');
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setIsLoading(true);
+
+    // Simulate a brief delay for realism
+    await new Promise(resolve => setTimeout(resolve, 500));
+
+    if (email === DEMO_CREDENTIALS.email && password === DEMO_CREDENTIALS.password) {
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('demo_logged_in', 'true');
+        localStorage.setItem('show_onboarding', 'true');
+        router.push('/dashboard');
+      }
+    } else {
+      setError('Invalid email or password');
     }
+
+    setIsLoading(false);
   };
 
   return (
@@ -42,15 +65,54 @@ export default function LoginPage() {
             {APP_CONFIG.TAGLINE}
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <Button
-            onClick={handleDemoLogin}
-            className="w-full h-12 text-base"
-          >
-            Log in as Demo Seller
-          </Button>
-          <p className="text-center text-xs text-gray-500">
-            This is a demo application with synthetic data
+        <CardContent>
+          <form onSubmit={handleLogin} className="space-y-4">
+            <div>
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+                Email
+              </label>
+              <input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="demo@email.com"
+                className="w-full rounded-md border border-gray-300 bg-white text-gray-900 px-4 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 placeholder:text-gray-400"
+                required
+              />
+            </div>
+            <div>
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+                Password
+              </label>
+              <input
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
+                className="w-full rounded-md border border-gray-300 bg-white text-gray-900 px-4 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 placeholder:text-gray-400"
+                required
+              />
+            </div>
+
+            {error && (
+              <div className="text-sm text-red-600 text-center">
+                {error}
+              </div>
+            )}
+
+            <Button
+              type="submit"
+              className="w-full h-12 text-base"
+              disabled={isLoading}
+            >
+              {isLoading ? 'Signing in...' : 'Sign In'}
+            </Button>
+          </form>
+
+          <p className="text-center text-xs text-gray-500 mt-4">
+            This is a demo application for Square PM role
           </p>
         </CardContent>
       </Card>

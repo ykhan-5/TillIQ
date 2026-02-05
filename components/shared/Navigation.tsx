@@ -7,7 +7,6 @@ import { APP_CONFIG } from '@/lib/utils/constants';
 
 const NAV_ITEMS = [
   { href: '/dashboard', label: 'Dashboard' },
-  { href: '/metrics', label: 'Metrics' },
   { href: '/ask', label: 'Ask your Shop' },
   { href: '/reports', label: 'Reports' },
   { href: '/settings', label: 'Settings' },

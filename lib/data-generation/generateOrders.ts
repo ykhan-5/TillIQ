@@ -9,10 +9,6 @@ export interface GeneratedOrder extends Omit<Order, 'id' | 'created_at' | 'gross
   product_id: string;
 }
 
-interface InventoryMap {
-  [product_id: string]: number;
-}
-
 interface CustomerOrderCount {
   [customer_id: string]: number;
 }
@@ -23,13 +19,7 @@ export function generateOrders(
   days: number = DATA_GENERATION_CONFIG.DAYS
 ): GeneratedOrder[] {
   const orders: GeneratedOrder[] = [];
-  const today = new Date();
-
-  // Initialize inventory tracking
-  const inventory: InventoryMap = {};
-  products.forEach(p => {
-    inventory[p.id] = p.initial_stock;
-  });
+  const today = startOfDay(new Date());
 
   // Track customer order counts
   const customerOrderCount: CustomerOrderCount = {};
@@ -37,9 +27,12 @@ export function generateOrders(
     customerOrderCount[c.id] = 0;
   });
 
-  // Generate orders for each day
+  // Generate orders for each day, from oldest to most recent
   for (let dayOffset = 0; dayOffset < days; dayOffset++) {
-    const date = startOfDay(subDays(today, days - dayOffset - 1));
+    // dayOffset 0 = oldest day (days-1 days ago)
+    // dayOffset days-1 = today
+    const daysAgo = days - 1 - dayOffset;
+    const date = subDays(today, daysAgo);
 
     // Calculate daily order volume with trends
     const isWeekend = [0, 6].includes(date.getDay());
@@ -56,14 +49,10 @@ export function generateOrders(
 
     // Generate orders for this day
     for (let i = 0; i < dailyOrders; i++) {
-      // Pick product weighted by category popularity
-      const product = pickWeightedProduct(products, inventory);
-      if (!product) continue; // Skip if all products are out of stock
+      // Pick a random product (no inventory constraints for demo data)
+      const product = pickRandomProduct(products);
 
-      // Check inventory
-      if (inventory[product.id] < 1) continue;
-
-      // Pick customer (prefer returning customers who haven't hit their order limit)
+      // Pick customer
       const customer = pickCustomer(customers, customerOrderCount);
 
       // Generate order details
@@ -93,8 +82,6 @@ export function generateOrders(
         cost
       });
 
-      // Update inventory and customer order count
-      inventory[product.id] -= quantity;
       customerOrderCount[customer.id]++;
     }
   }
@@ -102,21 +89,10 @@ export function generateOrders(
   return orders;
 }
 
-function pickWeightedProduct(
-  products: (GeneratedProduct & { id: string })[],
-  inventory: InventoryMap
-): (GeneratedProduct & { id: string }) | null {
-  // Filter products with available stock
-  const availableProducts = products.filter(p => inventory[p.id] > 0);
-  if (availableProducts.length === 0) return null;
-
-  // Get category weights
-  const categoryWeights = CATEGORIES.reduce((acc, cat) => {
-    acc[cat.name] = cat.weight;
-    return acc;
-  }, {} as { [key: string]: number });
-
-  // Pick category first
+function pickRandomProduct(
+  products: (GeneratedProduct & { id: string })[]
+): GeneratedProduct & { id: string } {
+  // Pick category first based on weights
   const random = Math.random();
   let cumulative = 0;
   let selectedCategory = CATEGORIES[0].name;
@@ -130,10 +106,9 @@ function pickWeightedProduct(
   }
 
   // Pick random product from that category
-  const categoryProducts = availableProducts.filter(p => p.category === selectedCategory);
+  const categoryProducts = products.filter(p => p.category === selectedCategory);
   if (categoryProducts.length === 0) {
-    // Fallback to any available product
-    return faker.helpers.arrayElement(availableProducts);
+    return faker.helpers.arrayElement(products);
   }
 
   return faker.helpers.arrayElement(categoryProducts);

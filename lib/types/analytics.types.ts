@@ -46,6 +46,13 @@ export interface SampleOrder {
   category: string;
 }
 
+export interface DailyChartData {
+  date: string;
+  displayDate: string;
+  revenue: number;
+  orders: number;
+}
+
 export interface InsightsPayload {
   time_range: string;
   kpis: KPIs;
@@ -54,6 +61,7 @@ export interface InsightsPayload {
   category_breakdown: CategoryBreakdown[];
   anomalies: Anomaly[];
   sample_orders: SampleOrder[];
+  chart_data: DailyChartData[];
 }
 
 export interface TimeRange {

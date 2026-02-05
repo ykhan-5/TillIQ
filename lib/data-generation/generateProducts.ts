@@ -2,7 +2,7 @@ import { faker } from '@faker-js/faker';
 import { CATEGORIES, PRODUCT_NAMES } from '@/lib/utils/constants';
 import type { Product } from '@/lib/types';
 
-export interface GeneratedProduct extends Omit<Product, 'id' | 'created_at'> {}
+export type GeneratedProduct = Omit<Product, 'id' | 'created_at'>;
 
 export function generateProducts(): GeneratedProduct[] {
   const products: GeneratedProduct[] = [];
@@ -23,7 +23,7 @@ export function generateProducts(): GeneratedProduct[] {
         category: category.name,
         base_price: parseFloat(base_price.toFixed(2)),
         cost: parseFloat((base_price * category.cost_pct).toFixed(2)),
-        initial_stock: faker.number.int({ min: 200, max: 800 })
+        initial_stock: faker.number.int({ min: 2000, max: 5000 })
       });
     }
   }
