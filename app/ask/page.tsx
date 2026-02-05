@@ -166,6 +166,12 @@ export default function AskPage() {
         body: JSON.stringify({ question, time_range: timeRange }),
       });
 
+      // Check content type before parsing JSON
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        throw new Error('Server error. Please try again later.');
+      }
+
       const data = await response.json();
 
       if (!response.ok) {

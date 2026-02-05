@@ -30,6 +30,16 @@ export async function POST(request: NextRequest) {
     const insightsResponse = await fetch(
       `${request.nextUrl.origin}/api/insights?time_range=${time_range}`
     );
+
+    if (!insightsResponse.ok) {
+      const errorText = await insightsResponse.text();
+      console.error('Insights fetch failed:', insightsResponse.status, errorText.substring(0, 200));
+      return NextResponse.json(
+        { error: 'Failed to fetch data. Please ensure the database is seeded.' },
+        { status: 502 }
+      );
+    }
+
     const insights = await insightsResponse.json();
 
     // Call OpenAI
