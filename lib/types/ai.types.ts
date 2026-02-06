@@ -19,6 +19,12 @@ export interface AIResponse {
 export interface AskRequest {
   question: string;
   time_range: string;
+  language?: string;
+}
+
+export interface AIResponseWithTranslation extends AIResponse {
+  english_translation?: AIResponse;
+  response_language?: string;
 }
 
 export interface PresetPrompt {
@@ -34,6 +40,8 @@ export interface ChatMessage {
   content: string | AIResponse;
   timestamp: Date;
   confidence?: ConfidenceLevel;
+  language?: string;
+  englishTranslation?: AIResponse;
 }
 
 export interface AIError {

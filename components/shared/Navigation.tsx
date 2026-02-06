@@ -10,7 +10,7 @@ const NAV_ITEMS = [
   { href: '/dashboard', label: 'Dashboard' },
   { href: '/ask', label: 'Ask your Shop' },
   { href: '/reports', label: 'Reports' },
-  { href: '/settings', label: 'Settings' },
+  { href: '/settings', label: 'Product' },
 ];
 
 export function Navigation() {

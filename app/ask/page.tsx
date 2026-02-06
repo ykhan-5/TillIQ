@@ -5,6 +5,7 @@ import { Navigation } from '@/components/shared/Navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { PRESET_PROMPTS } from '@/lib/ai/prompts';
+import { SUPPORTED_LANGUAGES, detectBrowserLanguage, DEFAULT_LANGUAGE } from '@/lib/i18n/languages';
 import type { AIResponse, ChatMessage, ConfidenceLevel } from '@/lib/types';
 
 const TIME_RANGES = [
@@ -27,17 +28,42 @@ function ConfidenceBadge({ level }: { level: ConfidenceLevel }) {
   );
 }
 
-function AIResponseDisplay({ response }: { response: AIResponse }) {
+interface AIResponseDisplayProps {
+  response: AIResponse;
+  englishTranslation?: AIResponse;
+  language?: string;
+}
+
+function AIResponseDisplay({ response, englishTranslation, language }: AIResponseDisplayProps) {
+  const [showEnglish, setShowEnglish] = useState(false);
+  const displayResponse = showEnglish && englishTranslation ? englishTranslation : response;
+  const hasTranslation = language && language !== DEFAULT_LANGUAGE && englishTranslation;
+
   return (
     <div className="space-y-3 sm:space-y-4">
+      {/* Translation Toggle */}
+      {hasTranslation && (
+        <div className="flex justify-end">
+          <button
+            onClick={() => setShowEnglish(!showEnglish)}
+            className="text-xs text-blue-600 hover:text-blue-800 flex items-center gap-1"
+          >
+            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" />
+            </svg>
+            {showEnglish ? 'View original' : 'View in English'}
+          </button>
+        </div>
+      )}
+
       {/* Summary */}
       <div>
         <h4 className="text-xs sm:text-sm font-semibold text-gray-900 mb-1">Summary</h4>
-        <p className="text-xs sm:text-sm text-gray-700">{response.summary}</p>
+        <p className="text-xs sm:text-sm text-gray-700">{displayResponse.summary}</p>
       </div>
 
       {/* Risks */}
-      {response.risks.length > 0 && (
+      {displayResponse.risks.length > 0 && (
         <div>
           <h4 className="text-xs sm:text-sm font-semibold text-red-700 mb-1 flex items-center gap-1">
             <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -46,7 +72,7 @@ function AIResponseDisplay({ response }: { response: AIResponse }) {
             Risks
           </h4>
           <ul className="list-disc list-inside space-y-1">
-            {response.risks.map((risk, i) => (
+            {displayResponse.risks.map((risk, i) => (
               <li key={i} className="text-xs sm:text-sm text-gray-700">{risk}</li>
             ))}
           </ul>
@@ -54,7 +80,7 @@ function AIResponseDisplay({ response }: { response: AIResponse }) {
       )}
 
       {/* Opportunities */}
-      {response.opportunities.length > 0 && (
+      {displayResponse.opportunities.length > 0 && (
         <div>
           <h4 className="text-xs sm:text-sm font-semibold text-green-700 mb-1 flex items-center gap-1">
             <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -63,7 +89,7 @@ function AIResponseDisplay({ response }: { response: AIResponse }) {
             Opportunities
           </h4>
           <ul className="list-disc list-inside space-y-1">
-            {response.opportunities.map((opp, i) => (
+            {displayResponse.opportunities.map((opp, i) => (
               <li key={i} className="text-xs sm:text-sm text-gray-700">{opp}</li>
             ))}
           </ul>
@@ -71,7 +97,7 @@ function AIResponseDisplay({ response }: { response: AIResponse }) {
       )}
 
       {/* Recommended Actions */}
-      {response.actions.length > 0 && (
+      {displayResponse.actions.length > 0 && (
         <div>
           <h4 className="text-xs sm:text-sm font-semibold text-blue-700 mb-1 flex items-center gap-1">
             <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -80,7 +106,7 @@ function AIResponseDisplay({ response }: { response: AIResponse }) {
             Actions
           </h4>
           <ol className="list-decimal list-inside space-y-1">
-            {response.actions.map((action, i) => (
+            {displayResponse.actions.map((action, i) => (
               <li key={i} className="text-xs sm:text-sm text-gray-700">{action}</li>
             ))}
           </ol>
@@ -88,7 +114,7 @@ function AIResponseDisplay({ response }: { response: AIResponse }) {
       )}
 
       {/* Numbers Used */}
-      {response.numbers_used.length > 0 && (
+      {displayResponse.numbers_used.length > 0 && (
         <div>
           <h4 className="text-xs sm:text-sm font-semibold text-gray-600 mb-2 flex items-center gap-1">
             <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -97,7 +123,7 @@ function AIResponseDisplay({ response }: { response: AIResponse }) {
             Numbers
           </h4>
           <div className="flex flex-wrap gap-1.5 sm:gap-2">
-            {response.numbers_used.map((num, i) => (
+            {displayResponse.numbers_used.map((num, i) => (
               <span key={i} className="inline-flex items-center px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-md text-[10px] sm:text-xs bg-gray-100 text-gray-700 border border-gray-200">
                 <span className="font-medium">{num.label}:</span>
                 <span className="ml-1">{num.value}</span>
@@ -109,7 +135,7 @@ function AIResponseDisplay({ response }: { response: AIResponse }) {
 
       {/* Confidence */}
       <div className="pt-2 border-t border-gray-100">
-        <ConfidenceBadge level={response.confidence} />
+        <ConfidenceBadge level={displayResponse.confidence} />
       </div>
     </div>
   );
@@ -133,8 +159,15 @@ export default function AskPage() {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [timeRange, setTimeRange] = useState('30d');
+  const [language, setLanguage] = useState(DEFAULT_LANGUAGE);
   const [error, setError] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Detect browser language on mount
+  useEffect(() => {
+    const detectedLang = detectBrowserLanguage();
+    setLanguage(detectedLang);
+  }, []);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -163,7 +196,7 @@ export default function AskPage() {
       const response = await fetch('/api/ask', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ question, time_range: timeRange }),
+        body: JSON.stringify({ question, time_range: timeRange, language }),
       });
 
       // Check content type before parsing JSON
@@ -184,6 +217,8 @@ export default function AskPage() {
         content: data as AIResponse,
         timestamp: new Date(),
         confidence: data.confidence,
+        language: data.response_language,
+        englishTranslation: data.english_translation,
       };
 
       setMessages(prev => [...prev, assistantMessage]);
@@ -215,19 +250,38 @@ export default function AskPage() {
               Get AI-powered insights about your sales and inventory
             </p>
           </div>
-          <div className="flex items-center gap-2">
-            <span className="text-xs sm:text-sm text-gray-600">Time range:</span>
-            <select
-              value={timeRange}
-              onChange={(e) => setTimeRange(e.target.value)}
-              className="rounded-md border border-gray-300 bg-white text-gray-900 px-2 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-            >
-              {TIME_RANGES.map((range) => (
-                <option key={range.value} value={range.value}>
-                  {range.label}
-                </option>
-              ))}
-            </select>
+          <div className="flex items-center gap-3 sm:gap-4 flex-wrap">
+            {/* Language Selector */}
+            <div className="flex items-center gap-2">
+              <span className="text-xs sm:text-sm text-gray-600">Language:</span>
+              <select
+                value={language}
+                onChange={(e) => setLanguage(e.target.value)}
+                className="rounded-md border border-gray-300 bg-white text-gray-900 px-2 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              >
+                {SUPPORTED_LANGUAGES.map((lang) => (
+                  <option key={lang.code} value={lang.code}>
+                    {lang.flag} {lang.nativeName}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Time Range Selector */}
+            <div className="flex items-center gap-2">
+              <span className="text-xs sm:text-sm text-gray-600">Time range:</span>
+              <select
+                value={timeRange}
+                onChange={(e) => setTimeRange(e.target.value)}
+                className="rounded-md border border-gray-300 bg-white text-gray-900 px-2 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              >
+                {TIME_RANGES.map((range) => (
+                  <option key={range.value} value={range.value}>
+                    {range.label}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
         </div>
 
@@ -280,6 +334,20 @@ export default function AskPage() {
                 </p>
               </CardContent>
             </Card>
+
+            {/* Multilingual info card */}
+            <Card className="mt-4 border-blue-100 bg-blue-50/30">
+              <CardContent className="pt-4">
+                <div className="flex items-start gap-2">
+                  <svg className="w-4 h-4 text-blue-600 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" />
+                  </svg>
+                  <p className="text-xs text-gray-600">
+                    <strong className="text-blue-700">Multilingual:</strong> Ask questions in English, Spanish, Portuguese, or French. Responses match your language; numbers stay consistent.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
           </div>
 
           {/* Main chat area */}
@@ -328,7 +396,11 @@ export default function AskPage() {
                           {message.role === 'user' ? (
                             <p className="text-xs sm:text-sm">{message.content as string}</p>
                           ) : (
-                            <AIResponseDisplay response={message.content as AIResponse} />
+                            <AIResponseDisplay
+                              response={message.content as AIResponse}
+                              englishTranslation={message.englishTranslation}
+                              language={message.language}
+                            />
                           )}
                         </div>
                       </div>

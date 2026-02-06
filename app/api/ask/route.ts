@@ -4,6 +4,7 @@ import { SYSTEM_PROMPT } from '@/lib/ai/prompts';
 import { AIResponseSchema } from '@/lib/ai/responseSchemas';
 import { buildInsightsPayload } from '@/lib/analytics';
 import { getSupabaseClient, isSupabaseConfigured } from '@/lib/supabase/client';
+import { getLanguageInstruction, DEFAULT_LANGUAGE } from '@/lib/i18n/languages';
 import type { AskRequest } from '@/lib/types';
 
 // Force dynamic rendering
@@ -12,7 +13,7 @@ export const dynamic = 'force-dynamic';
 export async function POST(request: NextRequest) {
   try {
     const body: AskRequest = await request.json();
-    const { question, time_range } = body;
+    const { question, time_range, language = DEFAULT_LANGUAGE } = body;
 
     if (!question) {
       return NextResponse.json(
@@ -66,12 +67,15 @@ export async function POST(request: NextRequest) {
     // Build insights payload directly
     const insights = buildInsightsPayload(allOrders, time_range);
 
-    // Call OpenAI
+    // Call OpenAI with language instruction
     const openai = getOpenAIClient();
+    const languageInstruction = getLanguageInstruction(language);
+    const systemPromptWithLanguage = SYSTEM_PROMPT + languageInstruction;
+
     const completion = await openai.chat.completions.create({
       model: 'gpt-4o-mini',
       messages: [
-        { role: 'system', content: SYSTEM_PROMPT },
+        { role: 'system', content: systemPromptWithLanguage },
         {
           role: 'user',
           content: `Data context:\n${JSON.stringify(insights, null, 2)}\n\nQuestion: ${question}`
@@ -79,13 +83,20 @@ export async function POST(request: NextRequest) {
       ],
       response_format: { type: 'json_object' },
       temperature: 0.7,
-      max_tokens: 1000
+      max_tokens: language !== DEFAULT_LANGUAGE ? 2000 : 1000
     });
 
     const rawResponse = JSON.parse(completion.choices[0].message.content || '{}');
     const validatedResponse = AIResponseSchema.parse(rawResponse);
 
-    return NextResponse.json(validatedResponse);
+    // Extract english_translation if present (for non-English responses)
+    const { english_translation, ...mainResponse } = validatedResponse;
+
+    return NextResponse.json({
+      ...mainResponse,
+      response_language: language,
+      english_translation: language !== DEFAULT_LANGUAGE ? english_translation : undefined
+    });
   } catch (error) {
     console.error('Ask API error:', error);
     return NextResponse.json(
