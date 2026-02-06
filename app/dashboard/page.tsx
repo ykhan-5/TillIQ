@@ -42,26 +42,26 @@ function TrendArrow({ value }: { value: number }) {
 
 function TopProductsTable({ products }: { products: TopProduct[] }) {
   return (
-    <div className="overflow-x-auto">
+    <div className="overflow-x-auto -mx-2 sm:mx-0">
       <table className="min-w-full divide-y divide-gray-200">
         <thead>
           <tr>
-            <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product</th>
-            <th className="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Units</th>
-            <th className="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Revenue</th>
-            <th className="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Trend</th>
+            <th className="px-2 sm:px-3 py-2 text-left text-[10px] sm:text-xs font-medium text-gray-500 uppercase tracking-wider">Product</th>
+            <th className="px-2 sm:px-3 py-2 text-right text-[10px] sm:text-xs font-medium text-gray-500 uppercase tracking-wider hidden sm:table-cell">Units</th>
+            <th className="px-2 sm:px-3 py-2 text-right text-[10px] sm:text-xs font-medium text-gray-500 uppercase tracking-wider">Revenue</th>
+            <th className="px-2 sm:px-3 py-2 text-right text-[10px] sm:text-xs font-medium text-gray-500 uppercase tracking-wider">Trend</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-gray-100">
           {products.slice(0, 5).map((product, idx) => (
             <tr key={idx} className="hover:bg-gray-50">
-              <td className="px-3 py-2">
-                <div className="text-sm font-medium text-gray-900">{product.name}</div>
-                <div className="text-xs text-gray-500">{product.category}</div>
+              <td className="px-2 sm:px-3 py-2">
+                <div className="text-xs sm:text-sm font-medium text-gray-900 truncate max-w-[120px] sm:max-w-none">{product.name}</div>
+                <div className="text-[10px] sm:text-xs text-gray-500">{product.category}</div>
               </td>
-              <td className="px-3 py-2 text-right text-sm text-gray-700">{product.units}</td>
-              <td className="px-3 py-2 text-right text-sm text-gray-700">${product.revenue.toLocaleString()}</td>
-              <td className="px-3 py-2 text-right">
+              <td className="px-2 sm:px-3 py-2 text-right text-xs sm:text-sm text-gray-700 hidden sm:table-cell">{product.units}</td>
+              <td className="px-2 sm:px-3 py-2 text-right text-xs sm:text-sm text-gray-700">${product.revenue.toLocaleString()}</td>
+              <td className="px-2 sm:px-3 py-2 text-right">
                 <TrendArrow value={product.trend_pct} />
               </td>
             </tr>
@@ -116,21 +116,21 @@ export default function DashboardPage() {
       <OnboardingModal />
       <Navigation />
 
-      <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+      <main className="mx-auto max-w-7xl px-3 py-4 sm:px-6 sm:py-8 lg:px-8">
         {/* Header */}
-        <div className="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="mb-4 sm:mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-            <p className="mt-2 text-sm text-gray-600">
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Dashboard</h1>
+            <p className="mt-1 sm:mt-2 text-xs sm:text-sm text-gray-600">
               Welcome back! Here&apos;s what&apos;s happening with your shop.
             </p>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-sm text-gray-600">Time range:</span>
+            <span className="text-xs sm:text-sm text-gray-600">Time range:</span>
             <select
               value={timeRange}
               onChange={(e) => setTimeRange(e.target.value)}
-              className="rounded-md border border-gray-300 bg-white text-gray-900 px-3 py-1.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="rounded-md border border-gray-300 bg-white text-gray-900 px-2 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
             >
               {TIME_RANGES.map((range) => (
                 <option key={range.value} value={range.value}>
@@ -179,7 +179,7 @@ export default function DashboardPage() {
         {insights && !isLoading && (
           <>
             {/* KPI Cards */}
-            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4 mb-8">
+            <div className="grid grid-cols-2 gap-3 sm:gap-6 lg:grid-cols-4 mb-4 sm:mb-8">
               <KPICard
                 label="Revenue"
                 value={insights.kpis.revenue}
@@ -215,13 +215,13 @@ export default function DashboardPage() {
             </div>
 
             {/* Two Column Layout */}
-            <div className="grid lg:grid-cols-2 gap-6 mb-8">
+            <div className="grid lg:grid-cols-2 gap-3 sm:gap-6 mb-4 sm:mb-8">
               {/* Top Products */}
               <Card>
-                <CardHeader>
-                  <CardTitle className="text-base">Top Products</CardTitle>
+                <CardHeader className="pb-2 sm:pb-4">
+                  <CardTitle className="text-sm sm:text-base">Top Products</CardTitle>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="pt-0">
                   {insights.top_products.length > 0 ? (
                     <TopProductsTable products={insights.top_products} />
                   ) : (
@@ -234,10 +234,10 @@ export default function DashboardPage() {
 
               {/* Sales Over Time */}
               <Card>
-                <CardHeader>
-                  <CardTitle className="text-base">Sales Over Time</CardTitle>
+                <CardHeader className="pb-2 sm:pb-4">
+                  <CardTitle className="text-sm sm:text-base">Sales Over Time</CardTitle>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="pt-0">
                   <SalesChart chartData={insights.chart_data} timeRange={timeRange} />
                 </CardContent>
               </Card>
@@ -245,16 +245,16 @@ export default function DashboardPage() {
 
             {/* Weekly Brief CTA */}
             <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
-              <CardContent className="py-6">
-                <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-                  <div>
-                    <h3 className="text-lg font-semibold text-gray-900">Get deeper insights</h3>
-                    <p className="text-sm text-gray-600 mt-1">
+              <CardContent className="py-4 sm:py-6">
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4">
+                  <div className="text-center sm:text-left">
+                    <h3 className="text-base sm:text-lg font-semibold text-gray-900">Get deeper insights</h3>
+                    <p className="text-xs sm:text-sm text-gray-600 mt-1">
                       Ask questions about your data and get AI-powered recommendations
                     </p>
                   </div>
-                  <Link href="/ask">
-                    <Button>
+                  <Link href="/ask" className="w-full sm:w-auto">
+                    <Button className="w-full sm:w-auto">
                       Open Ask your Shop
                       <svg className="ml-2 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
